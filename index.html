@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub User Search & Contributions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #39d353, #26a641);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .search-container {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #30363d;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 400px;
+            padding: 12px 16px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e6edf3;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #238636;
+            box-shadow: 0 0 0 3px rgba(35, 134, 54, 0.3);
+        }
+
+        .btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #2ea043;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background: #484f58;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .suggested-users {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .suggested-user {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #7d8590;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .suggested-user:hover {
+            background: #30363d;
+            color: #e6edf3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7d8590;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #30363d;
+            border-radius: 50%;
+            border-top-color: #39d353;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f85149;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .user-profile {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #30363d;
+        }
+
+        .profile-header {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #30363d;
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .profile-username {
+            color: #7d8590;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .profile-bio {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #7d8590;
+        }
+
+        .stat-number {
+            color: #e6edf3;
+            font-weight: 600;
+        }
+
+        .profile-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .profile-link {
+            color: #58a6ff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .profile-link:hover {
+            text-decoration: underline;
+        }
+
+        .contributions-section {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #30363d;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .download-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            background: #21262d;
+            border: 1px solid #30363d;
+        }
+
+        .btn-small:hover:not(:disabled) {
+            background: #30363d;
+        }
+
+        .contributions-wrapper {
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .contributions-graph {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            min-width: 800px;
+        }
+
+        .months {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 3px;
+            margin-bottom: 5px;
+            grid-column: 2;
+        }
+
+        .month {
+            font-size: 12px;
+            color: #7d8590;
+            text-align: center;
+        }
+
+        .days-of-week {
+            display: grid;
+            grid-template-rows: repeat(7, 1fr);
+            gap: 3px;
+            padding-right: 10px;
+        }
+
+        .day-label {
+            font-size: 12px;
+            color: #7d8590;
+            text-align: right;
+            line-height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .weeks {
+            display: grid;
+            grid-template-columns: repeat(53, 1fr);
+            gap: 3px;
+        }
+
+        .week {
+            display: grid;
+            grid-template-rows: repeat(7, 1fr);
+            gap: 3px;
+        }
+
+        .day {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid #1e2328;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+        }
+
+        .day:hover {
+            border-color: #30363d;
+            transform: scale(1.1);
+        }
+
+        .day.level-0 {
+            background-color: #161b22;
+        }
+
+        .day.level-1 {
+            background-color: #0e4429;
+        }
+
+        .day.level-2 {
+            background-color: #006d32;
+        }
+
+        .day.level-3 {
+            background-color: #26a641;
+        }
+
+        .day.level-4 {
+            background-color: #39d353;
+        }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #7d8590;
+        }
+
+        .legend-item {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid #1e2328;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: #1c2128;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #e6edf3;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .repos-section {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #30363d;
+        }
+
+        .repos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .repo-card {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .repo-card:hover {
+            border-color: #58a6ff;
+        }
+
+        .repo-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .repo-name {
+            color: #58a6ff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .repo-name:hover {
+            text-decoration: underline;
+        }
+
+        .repo-visibility {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #7d8590;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .repo-description {
+            color: #7d8590;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .repo-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #7d8590;
+        }
+
+        .repo-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .language-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .search-form {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .search-input {
+                max-width: none;
+                width: 100%;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .day {
+                width: 10px;
+                height: 10px;
+            }
+
+            .legend-item {
+                width: 10px;
+                height: 10px;
+            }
+
+            .repos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GitHub User Search</h1>
+            <p>Search for GitHub users and view their contribution graphs and repositories</p>
+        </div>
+
+        <div class="search-container">
+            <form class="search-form" id="searchForm">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="usernameInput" 
+                    placeholder="Enter GitHub username (e.g., octocat)"
+                    autocomplete="off"
+                >
+                <button type="submit" class="btn" id="searchBtn">
+                    🔍 Search User
+                </button>
+            </form>
+            
+            <div class="suggested-users">
+                <span style="color: #7d8590; margin-right: 10px;">Try:</span>
+                <div class="suggested-user" onclick="searchUser('octocat')">octocat</div>
+                <div class="suggested-user" onclick="searchUser('torvalds')">torvalds</div>
+                <div class="suggested-user" onclick="searchUser('gaearon')">gaearon</div>
+                <div class="suggested-user" onclick="searchUser('sindresorhus')">sindresorhus</div>
+                <div class="suggested-user" onclick="searchUser('addyosmani')">addyosmani</div>
+            </div>
+        </div>
+
+        <div id="loadingDiv" class="loading hidden">
+            <div class="spinner"></div>
+            Loading user data...
+        </div>
+
+        <div id="errorDiv" class="error hidden"></div>
+
+        <div id="resultsContainer" class="hidden">
+            <div class="user-profile" id="userProfile">
+                <!-- User profile will be populated here -->
+            </div>
+
+            <div class="contributions-section">
+                <div class="section-header">
+                    <h2 class="section-title">Contribution Activity</h2>
+                    <div class="download-options">
+                        <button class="btn btn-small" onclick="downloadContributionsAsPNG()">📷 PNG</button>
+                        <button class="btn btn-small" onclick="downloadContributionsAsSVG()">📐 SVG</button>
+                        <button class="btn btn-small" onclick="downloadContributionsAsJSON()">📄 Data</button>
+                    </div>
+                </div>
+                
+                <div class="contributions-wrapper">
+                    <div class="contributions-graph">
+                        <div class="months" id="monthsContainer"></div>
+                        <div class="days-of-week">
+                            <div class="day-label"></div>
+                            <div class="day-label">Mon</div>
+                            <div class="day-label"></div>
+                            <div class="day-label">Wed</div>
+                            <div class="day-label"></div>
+                            <div class="day-label">Fri</div>
+                            <div class="day-label"></div>
+                        </div>
+                        <div class="weeks" id="weeksContainer"></div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <span>Less</span>
+                    <div class="legend-item level-0"></div>
+                    <div class="legend-item level-1"></div>
+                    <div class="legend-item level-2"></div>
+                    <div class="legend-item level-3"></div>
+                    <div class="legend-item level-4"></div>
+                    <span>More</span>
+                </div>
+            </div>
+
+            <div class="repos-section">
+                <div class="section-header">
+                    <h2 class="section-title">Popular Repositories</h2>
+                </div>
+                <div class="repos-grid" id="reposGrid">
+                    <!-- Repositories will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        let currentUser = null;
+        let contributionData = {};
+
+        // Language colors mapping
+        const languageColors = {
+            'JavaScript': '#f1e05a',
+            'TypeScript': '#2b7489',
+            'Python': '#3572A5',
+            'Java': '#b07219',
+            'C++': '#f34b7d',
+            'C': '#555555',
+            'C#': '#239120',
+            'PHP': '#4F5D95',
+            'Ruby': '#701516',
+            'Go': '#00ADD8',
+            'Rust': '#dea584',
+            'Swift': '#ffac45',
+            'Kotlin': '#F18E33',
+            'HTML': '#e34c26',
+            'CSS': '#1572B6',
+            'Shell': '#89e051',
+            'Vue': '#2c3e50',
+            'React': '#61dafb'
+        };
+
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('usernameInput').value.trim();
+            if (username) {
+                await searchUser(username);
+            }
+        });
+
+        async function searchUser(username) {
+            document.getElementById('usernameInput').value = username;
+            document.getElementById('loadingDiv').classList.remove('hidden');
+            document.getElementById('errorDiv').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('searchBtn').disabled = true;
+
+            try {
+                // Fetch user data
+                const userResponse = await fetch(`https://api.github.com/users/${username}`);
+                if (!userResponse.ok) {
+                    throw new Error(userResponse.status === 404 ? 'User not found' : 'Failed to fetch user data');
+                }
+                const userData = await userResponse.json();
+
+                // Fetch user repositories
+                const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=stars&per_page=6`);
+                const reposData = await reposResponse.json();
+
+                // Generate mock contribution data (GitHub API requires authentication for real contribution data)
+                generateMockContributionData();
+
+                currentUser = userData;
+                displayUserProfile(userData);
+                displayContributions();
+                displayRepositories(reposData);
+
+                document.getElementById('resultsContainer').classList.remove('hidden');
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                document.getElementById('loadingDiv').classList.add('hidden');
+                document.getElementById('searchBtn').disabled = false;
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorDiv');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function displayUserProfile(user) {
+            const profileDiv = document.getElementById('userProfile');
+            
+            const joinDate = new Date(user.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long'
+            });
+
+            profileDiv.innerHTML = `
+                <div class="profile-header">
+                    <img src="${user.avatar_url}" alt="${user.login}" class="profile-avatar">
+                    <div class="profile-info">
+                        <h2 class="profile-name">${user.name || user.login}</h2>
+                        <p class="profile-username">@${user.login}</p>
+                        ${user.bio ? `<p class="profile-bio">${user.bio}</p>` : ''}
+                        
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                👥 <span class="stat-number">${user.followers.toLocaleString()}</span> followers
+                            </div>
+                            <div class="stat-item">
+                                👤 <span class="stat-number">${user.following.toLocaleString()}</span> following
+                            </div>
+                            <div class="stat-item">
+                                📚 <span class="stat-number">${user.public_repos.toLocaleString()}</span> repositories
+                            </div>
+                            ${user.location ? `<div class="stat-item">📍 ${user.location}</div>` : ''}
+                            <div class="stat-item">📅 Joined ${joinDate}</div>
+                        </div>
+
+                        <div class="profile-links">
+                            <a href="${user.html_url}" target="_blank" class="profile-link">
+                                🔗 GitHub Profile
+                            </a>
+                            ${user.blog ? `<a href="${user.blog.startsWith('http') ? user.blog : 'https://' + user.blog}" target="_blank" class="profile-link">🌐 Website</a>` : ''}
+                            ${user.twitter_username ? `<a href="https://twitter.com/${user.twitter_username}" target="_blank" class="profile-link">🐦 Twitter</a>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateMockContributionData() {
+            contributionData = {};
+            const currentDate = new Date();
+            const startDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), currentDate.getDate());
+            
+            let currentDateIter = new Date(startDate);
+            while (currentDateIter <= currentDate) {
+                const dateStr = currentDateIter.toISOString().split('T')[0];
+                const dayOfWeek = currentDateIter.getDay();
+                
+                // More realistic pattern: more activity on weekdays
+                let baseProbability = dayOfWeek === 0 || dayOfWeek === 6 ? 0.3 : 0.7;
+                
+                // Add seasonal variation
+                const monthOfYear = currentDateIter.getMonth();
+                if (monthOfYear >= 5 && monthOfYear <= 7) baseProbability *= 0.8; // Summer
+                if (monthOfYear >= 10 || monthOfYear <= 1) baseProbability *= 1.2; // Winter
+                
+                if (Math.random() < baseProbability) {
+                    contributionData[dateStr] = Math.floor(Math.random() * 15) + 1;
+                } else {
+                    contributionData[dateStr] = 0;
+                }
+                
+                currentDateIter.setDate(currentDateIter.getDate() + 1);
+            }
+        }
+
+        function displayContributions() {
+            generateMonths();
+            generateWeeks();
+            updateContributionGraph();
+        }
+
+        function generateMonths() {
+            const monthsContainer = document.getElementById('monthsContainer');
+            monthsContainer.innerHTML = '';
+            
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            for (let i = 0; i < 12; i++) {
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'month';
+                monthDiv.textContent = months[i];
+                monthsContainer.appendChild(monthDiv);
+            }
+        }
+
+        function generateWeeks() {
+            const weeksContainer = document.getElementById('weeksContainer');
+            weeksContainer.innerHTML = '';
+            
+            const currentDate = new Date();
+            const startDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), currentDate.getDate());
+            
+            let currentWeekDate = new Date(startDate);
+            currentWeekDate.setDate(currentWeekDate.getDate() - currentWeekDate.getDay());
+            
+            for (let week = 0; week < 53; week++) {
+                const weekDiv = document.createElement('div');
+                weekDiv.className = 'week';
+                
+                for (let day = 0; day < 7; day++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'day level-0';
+                    
+                    const dayDate = new Date(currentWeekDate);
+                    dayDate.setDate(dayDate.getDate() + day);
+                    
+                    if (dayDate >= startDate && dayDate <= currentDate) {
+                        const dateStr = dayDate.toISOString().split('T')[0];
+                        dayDiv.dataset.date = dateStr;
+                        dayDiv.addEventListener('mouseenter', showTooltip);
+                        dayDiv.addEventListener('mouseleave', hideTooltip);
+                    } else {
+                        dayDiv.style.visibility = 'hidden';
+                    }
+                    
+                    weekDiv.appendChild(dayDiv);
+                }
+                
+                weeksContainer.appendChild(weekDiv);
+                currentWeekDate.setDate(currentWeekDate.getDate() + 7);
+            }
+        }
+
+        function updateContributionGraph() {
+            const days = document.querySelectorAll('.day[data-date]');
+            let maxContributions = 0;
+            
+            // Calculate max contributions for level scaling
+            Object.values(contributionData).forEach(count => {
+                if (count > maxContributions) maxContributions = count;
+            });
+            
+            days.forEach(day => {
+                const dateStr = day.dataset.date;
+                const contributions = contributionData[dateStr] || 0;
+                
+                // Remove all level classes
+                day.className = day.className.replace(/level-\d/g, '');
+                
+                // Add appropriate level class
+                let level = 0;
+                if (contributions > 0) {
+                    if (maxContributions <= 4) {
+                        level = contributions;
+                    } else {
+                        level = Math.ceil((contributions / maxContributions) * 4);
+                    }
+                    level = Math.min(level, 4);
+                }
+                
+                day.classList.add(`level-${level}`);
+            });
+        }
+
+        function displayRepositories(repos) {
+            const reposGrid = document.getElementById('reposGrid');
+            reposGrid.innerHTML = '';
+            
+            repos.forEach(repo => {
+                const repoCard = document.createElement('div');
+                repoCard.className = 'repo-card';
+                
+                const languageColor = languageColors[repo.language] || '#6e7681';
+                
+                repoCard.innerHTML = `
+                    <div class="repo-header">
+                        <a href="${repo.html_url}" target="_blank" class="repo-name">${repo.name}</a>
+                        <span class="repo-visibility">${repo.private ? 'Private' : 'Public'}</span>
+                    </div>
+                    ${repo.description ? `<p class="repo-description">${repo.description}</p>` : ''}
+                    <div class="repo-stats">
+                        ${repo.language ? `
+                            <div class="repo-stat">
+                                <div class="language-color" style="background-color: ${languageColor}"></div>
+                                ${repo.language}
+                            </div>
+                        ` : ''}
+                        <div class="repo-stat">⭐ ${repo.stargazers_count.toLocaleString()}</div>
+                        <div class="repo-stat">🍴 ${repo.forks_count.toLocaleString()}</div>
+                        ${repo.license ? `<div class="repo-stat">📄 ${repo.license.name}</div>` : ''}
+                    </div>
+                `;
+                
+                reposGrid.appendChild(repoCard);
+            });
+        }
+
+        function showTooltip(event) {
+            const tooltip = document.getElementById('tooltip');
+            const dateStr = event.target.dataset.date;
+            const contributions = contributionData[dateStr] || 0;
+            const date = new Date(dateStr);
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            tooltip.innerHTML = `<strong>${contributions} contributions</strong><br>${formattedDate}`;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY - 10 + 'px';
+            tooltip.classList.add('show');
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.classList.remove('show');
+        }
+
+        function downloadContributionsAsPNG() {
+            if (!currentUser) return;
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 1200;
+            canvas.height = 400;
+            
+            // Fill background
+            ctx.fillStyle = '#0d1117';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw title
+            ctx.fillStyle = '#e6edf3';
+            ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+            ctx.fillText(`${currentUser.login}'s GitHub Contributions`, 50, 40);
+            
+            // Draw contribution squares
+            const days = document.querySelectorAll('.day[data-date]');
+            const startX = 100;
+            const startY = 80;
+            const cellSize = 14;
+            const gap = 3;
+            
+            days.forEach((day, index) => {
+                const week = Math.floor(index / 7);
+                const dayOfWeek = index % 7;
+                
+                const x = startX + week * (cellSize + gap);
+                const y = startY + dayOfWeek * (cellSize + gap);
+                
+                // Get color based on level
+                let color = '#161b22';
+                if (day.classList.contains('level-1')) color = '#0e4429';
+                if (day.classList.contains('level-2')) color = '#006d32';
+                if (day.classList.contains('level-3')) color = '#26a641';
+                if (day.classList.contains('level-4')) color = '#39d353';
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, cellSize, cellSize);
+                
+                // Add border
+                ctx.strokeStyle = '#1e2328';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, cellSize, cellSize);
+            });
+            
+            // Add legend
+            const legendY = canvas.height - 50;
+            ctx.fillStyle = '#7d8590';
+            ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+            ctx.fillText('Less', canvas.width - 250, legendY + 10);
+            
+            const legendColors = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
+            legendColors.forEach((color, index) => {
+                ctx.fillStyle = color;
+                ctx.fillRect(canvas.width - 200 + index * 20, legendY, 12, 12);
+                ctx.strokeStyle = '#1e2328';
+                ctx.strokeRect(canvas.width - 200 + index * 20, legendY, 12, 12);
+            });
+            
+            ctx.fillStyle = '#7d8590';
+            ctx.fillText('More', canvas.width - 80, legendY + 10);
+            
+            // Download the image
+            const link = document.createElement('a');
+            link.download = `${currentUser.login}-github-contributions.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadContributionsAsSVG() {
+            if (!currentUser) return;
+            
+            const days = document.querySelectorAll('.day[data-date]');
+            const cellSize = 12;
+            const gap = 3;
+            const startX = 100;
+            const startY = 80;
+            
+            let svg = `<svg width="1200" height="400" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="#0d1117"/>
+                <text x="50" y="40" fill="#e6edf3" font-family="system-ui" font-size="24" font-weight="bold">${currentUser.login}'s GitHub Contributions</text>`;
+            
+            days.forEach((day, index) => {
+                const week = Math.floor(index / 7);
+                const dayOfWeek = index % 7;
+                
+                const x = startX + week * (cellSize + gap);
+                const y = startY + dayOfWeek * (cellSize + gap);
+                
+                let color = '#161b22';
+                if (day.classList.contains('level-1')) color = '#0e4429';
+                if (day.classList.contains('level-2')) color = '#006d32';
+                if (day.classList.contains('level-3')) color = '#26a641';
+                if (day.classList.contains('level-4')) color = '#39d353';
+                
+                svg += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" fill="${color}" stroke="#1e2328" stroke-width="1" rx="2"/>`;
+            });
+            
+            // Add legend
+            const legendY = 350;
+            svg += `<text x="950" y="${legendY + 10}" fill="#7d8590" font-family="system-ui" font-size="12">Less</text>`;
+            
+            const legendColors = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
+            legendColors.forEach((color, index) => {
+                svg += `<rect x="${1000 + index * 20}" y="${legendY}" width="12" height="12" fill="${color}" stroke="#1e2328" stroke-width="1" rx="2"/>`;
+            });
+            
+            svg += `<text x="1120" y="${legendY + 10}" fill="#7d8590" font-family="system-ui" font-size="12">More</text>`;
+            svg += '</svg>';
+            
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.download = `${currentUser.login}-github-contributions.svg`;
+            link.href = url;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadContributionsAsJSON() {
+            if (!currentUser) return;
+            
+            const totalContributions = Object.values(contributionData).reduce((sum, val) => sum + val, 0);
+            
+            const data = {
+                user: {
+                    username: currentUser.login,
+                    name: currentUser.name,
+                    avatar_url: currentUser.avatar_url,
+                    html_url: currentUser.html_url
+                },
+                contributionData,
+                statistics: {
+                    totalContributions,
+                    averagePerDay: (totalContributions / Object.keys(contributionData).length).toFixed(2),
+                    maxContributionsInDay: Math.max(...Object.values(contributionData))
+                },
+                exportDate: new Date().toISOString(),
+                dateRange: {
+                    start: Math.min(...Object.keys(contributionData)),
+                    end: Math.max(...Object.keys(contributionData))
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.download = `${currentUser.login}-github-data.json`;
+            link.href = url;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // Add keyboard support
+        document.getElementById('usernameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Auto-focus search input
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('usernameInput').focus();
+        });
+    </script>
+</body>
+</html>
