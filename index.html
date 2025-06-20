@@ -603,6 +603,55 @@
 
             <div class="repos-section">
                 <div class="section-header">
+                    <h2 class="section-title">3D Profile Cards</h2>
+                    <div class="download-options">
+                        <button class="btn btn-small" onclick="download3DProfile('modern')">🎨 Modern 3D</button>
+                        <button class="btn btn-small" onclick="download3DProfile('glassmorphism')">💎 Glass 3D</button>
+                        <button class="btn btn-small" onclick="download3DProfile('neon')">⚡ Neon 3D</button>
+                        <button class="btn btn-small" onclick="download3DProfile('holographic')">🌈 Holographic</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="repos-section">
+                <div class="section-header">
+                    <h2 class="section-title">Popular Repositories</h2>
+                    <div class="download-options">
+                        <button class="btn btn-small" onclick="downloadContributionsAsPNG()">📷 PNG</button>
+                        <button class="btn btn-small" onclick="downloadContributionsAsSVG()">📐 SVG</button>
+                        <button class="btn btn-small" onclick="downloadContributionsAsJSON()">📄 Data</button>
+                    </div>
+                </div>
+                
+                <div class="contributions-wrapper">
+                    <div class="contributions-graph">
+                        <div class="months" id="monthsContainer"></div>
+                        <div class="days-of-week">
+                            <div class="day-label"></div>
+                            <div class="day-label">Mon</div>
+                            <div class="day-label"></div>
+                            <div class="day-label">Wed</div>
+                            <div class="day-label"></div>
+                            <div class="day-label">Fri</div>
+                            <div class="day-label"></div>
+                        </div>
+                        <div class="weeks" id="weeksContainer"></div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <span>Less</span>
+                    <div class="legend-item level-0"></div>
+                    <div class="legend-item level-1"></div>
+                    <div class="legend-item level-2"></div>
+                    <div class="legend-item level-3"></div>
+                    <div class="legend-item level-4"></div>
+                    <span>More</span>
+                </div>
+            </div>
+
+            <div class="repos-section">
+                <div class="section-header">
                     <h2 class="section-title">Popular Repositories</h2>
                 </div>
                 <div class="repos-grid" id="reposGrid">
@@ -1077,6 +1126,429 @@
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('usernameInput').focus();
         });
+
+        function download3DProfile(style = 'modern') {
+            if (!currentUser) return;
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // High resolution for crisp 3D effects
+            canvas.width = 1200;
+            canvas.height = 800;
+            
+            // Create gradients and effects based on style
+            const styles = {
+                modern: {
+                    bg: createModernBackground(ctx, canvas),
+                    cardBg: 'rgba(22, 27, 34, 0.95)',
+                    accent: '#39d353',
+                    secondary: '#58a6ff',
+                    shadow: 'rgba(0, 0, 0, 0.3)'
+                },
+                glassmorphism: {
+                    bg: createGlassBackground(ctx, canvas),
+                    cardBg: 'rgba(255, 255, 255, 0.1)',
+                    accent: '#00d4ff',
+                    secondary: '#ff6b6b',
+                    shadow: 'rgba(255, 255, 255, 0.2)'
+                },
+                neon: {
+                    bg: createNeonBackground(ctx, canvas),
+                    cardBg: 'rgba(0, 0, 0, 0.8)',
+                    accent: '#ff0080',
+                    secondary: '#00ff88',
+                    shadow: 'rgba(255, 0, 128, 0.5)'
+                },
+                holographic: {
+                    bg: createHolographicBackground(ctx, canvas),
+                    cardBg: 'rgba(13, 17, 23, 0.9)',
+                    accent: '#ff6b35',
+                    secondary: '#f7931e',
+                    shadow: 'rgba(247, 147, 30, 0.4)'
+                }
+            };
+            
+            const currentStyle = styles[style];
+            
+            // Draw background
+            currentStyle.bg;
+            
+            // Create 3D perspective effect
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const cardWidth = 500;
+            const cardHeight = 600;
+            
+            // Draw multiple shadow layers for 3D depth
+            for (let i = 5; i >= 0; i--) {
+                const offset = i * 4;
+                const alpha = 0.1 - (i * 0.015);
+                
+                ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+                drawRoundedRect(ctx, 
+                    centerX - cardWidth/2 + offset, 
+                    centerY - cardHeight/2 + offset, 
+                    cardWidth, cardHeight, 20
+                );
+            }
+            
+            // Main card background with 3D effect
+            ctx.fillStyle = currentStyle.cardBg;
+            drawRoundedRect(ctx, centerX - cardWidth/2, centerY - cardHeight/2, cardWidth, cardHeight, 20);
+            
+            // Add card border glow effect
+            if (style === 'neon' || style === 'holographic') {
+                ctx.strokeStyle = currentStyle.accent;
+                ctx.lineWidth = 3;
+                ctx.shadowColor = currentStyle.accent;
+                ctx.shadowBlur = 20;
+                drawRoundedRectStroke(ctx, centerX - cardWidth/2, centerY - cardHeight/2, cardWidth, cardHeight, 20);
+                ctx.shadowBlur = 0;
+            }
+            
+            // Profile section
+            const profileY = centerY - cardHeight/2 + 60;
+            
+            // Avatar with 3D ring effect
+            const avatarSize = 120;
+            const avatarX = centerX;
+            const avatarY = profileY + 60;
+            
+            // Draw avatar ring effect
+            for (let i = 0; i < 3; i++) {
+                const ringSize = avatarSize + (i * 8);
+                const ringAlpha = 0.3 - (i * 0.1);
+                
+                ctx.beginPath();
+                ctx.arc(avatarX, avatarY, ringSize/2, 0, Math.PI * 2);
+                ctx.strokeStyle = `${currentStyle.accent}${Math.floor(ringAlpha * 255).toString(16).padStart(2, '0')}`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            // Load and draw avatar (simulate with a colored circle for demo)
+            ctx.fillStyle = '#30363d';
+            ctx.beginPath();
+            ctx.arc(avatarX, avatarY, avatarSize/2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Avatar border
+            ctx.strokeStyle = currentStyle.accent;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // User info with 3D text effects
+            ctx.textAlign = 'center';
+            
+            // Name with shadow effect
+            const nameY = avatarY + avatarSize/2 + 40;
+            draw3DText(ctx, currentUser.name || currentUser.login, centerX, nameY, '32px', currentStyle.accent, style);
+            
+            // Username
+            const usernameY = nameY + 40;
+            draw3DText(ctx, `@${currentUser.login}`, centerX, usernameY, '20px', currentStyle.secondary, style);
+            
+            // Bio
+            if (currentUser.bio) {
+                const bioY = usernameY + 35;
+                ctx.fillStyle = '#e6edf3';
+                ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+                
+                // Wrap text
+                const bioLines = wrapText(ctx, currentUser.bio, cardWidth - 80);
+                bioLines.forEach((line, index) => {
+                    ctx.fillText(line, centerX, bioY + (index * 22));
+                });
+            }
+            
+            // Stats section with 3D boxes
+            const statsY = centerY + 50;
+            const stats = [
+                { label: 'Repositories', value: currentUser.public_repos.toLocaleString(), icon: '📚' },
+                { label: 'Followers', value: currentUser.followers.toLocaleString(), icon: '👥' },
+                { label: 'Following', value: currentUser.following.toLocaleString(), icon: '👤' }
+            ];
+            
+            const statBoxWidth = 140;
+            const statBoxHeight = 80;
+            const statSpacing = 20;
+            const totalStatsWidth = (statBoxWidth * 3) + (statSpacing * 2);
+            const startX = centerX - totalStatsWidth/2;
+            
+            stats.forEach((stat, index) => {
+                const x = startX + (index * (statBoxWidth + statSpacing));
+                
+                // 3D stat box
+                draw3DStatBox(ctx, x, statsY, statBoxWidth, statBoxHeight, stat, currentStyle, style);
+            });
+            
+            // GitHub branding with 3D effect
+            const brandingY = centerY + cardHeight/2 - 40;
+            draw3DText(ctx, 'GitHub Profile', centerX, brandingY, '16px', '#7d8590', style);
+            
+            // Add floating particles effect for some styles
+            if (style === 'neon' || style === 'holographic') {
+                drawFloatingParticles(ctx, canvas, currentStyle.accent);
+            }
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `${currentUser.login}-3d-profile-${style}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function createModernBackground(ctx, canvas) {
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#0d1117');
+            gradient.addColorStop(0.5, '#161b22');
+            gradient.addColorStop(1, '#21262d');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add geometric shapes
+            drawGeometricShapes(ctx, canvas, '#30363d');
+        }
+        
+        function createGlassBackground(ctx, canvas) {
+            const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(0.5, '#764ba2');
+            gradient.addColorStop(1, '#2d1b69');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add glass orbs
+            drawGlassOrbs(ctx, canvas);
+        }
+        
+        function createNeonBackground(ctx, canvas) {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add neon grid
+            drawNeonGrid(ctx, canvas);
+        }
+        
+        function createHolographicBackground(ctx, canvas) {
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(0.3, '#16213e');
+            gradient.addColorStop(0.7, '#0f3460');
+            gradient.addColorStop(1, '#533483');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add holographic lines
+            drawHolographicLines(ctx, canvas);
+        }
+        
+        function drawRoundedRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        function drawRoundedRectStroke(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        
+        function draw3DText(ctx, text, x, y, fontSize, color, style) {
+            ctx.font = `bold ${fontSize} -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`;
+            
+            // Shadow layers for 3D effect
+            const shadowLayers = style === 'neon' ? 5 : 3;
+            for (let i = shadowLayers; i > 0; i--) {
+                ctx.fillStyle = style === 'neon' ? `${color}${Math.floor(50 - i*8).toString(16).padStart(2, '0')}` : `rgba(0, 0, 0, ${0.3 - i*0.1})`;
+                ctx.fillText(text, x + i*2, y + i*2);
+            }
+            
+            // Main text
+            ctx.fillStyle = color;
+            if (style === 'neon') {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 15;
+            }
+            ctx.fillText(text, x, y);
+            ctx.shadowBlur = 0;
+        }
+        
+        function draw3DStatBox(ctx, x, y, width, height, stat, styleConfig, style) {
+            // 3D box effect
+            const depth = 8;
+            
+            // Back face
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            drawRoundedRect(ctx, x + depth, y + depth, width, height, 8);
+            
+            // Main face
+            ctx.fillStyle = styleConfig.cardBg;
+            drawRoundedRect(ctx, x, y, width, height, 8);
+            
+            // Border
+            if (style === 'neon' || style === 'glassmorphism') {
+                ctx.strokeStyle = styleConfig.accent;
+                ctx.lineWidth = 2;
+                if (style === 'neon') {
+                    ctx.shadowColor = styleConfig.accent;
+                    ctx.shadowBlur = 10;
+                }
+                drawRoundedRectStroke(ctx, x, y, width, height, 8);
+                ctx.shadowBlur = 0;
+            }
+            
+            // Content
+            ctx.textAlign = 'center';
+            ctx.fillStyle = styleConfig.accent;
+            ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+            ctx.fillText(stat.icon, x + width/2, y + 30);
+            
+            ctx.fillStyle = '#e6edf3';
+            ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+            ctx.fillText(stat.value, x + width/2, y + 50);
+            
+            ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+            ctx.fillStyle = '#7d8590';
+            ctx.fillText(stat.label, x + width/2, y + 68);
+        }
+        
+        function drawGeometricShapes(ctx, canvas, color) {
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.1;
+            
+            // Draw various geometric shapes
+            for (let i = 0; i < 15; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 100 + 20;
+                
+                if (Math.random() > 0.5) {
+                    // Circle
+                    ctx.beginPath();
+                    ctx.arc(x, y, size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Rectangle
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawGlassOrbs(ctx, canvas) {
+            for (let i = 0; i < 8; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const radius = Math.random() * 80 + 40;
+                
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawNeonGrid(ctx, canvas) {
+            ctx.strokeStyle = '#ff0080';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.3;
+            
+            const gridSize = 50;
+            
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawHolographicLines(ctx, canvas) {
+            ctx.strokeStyle = '#ff6b35';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.4;
+            
+            for (let i = 0; i < 20; i++) {
+                const y = (i * canvas.height) / 20;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawFloatingParticles(ctx, canvas, color) {
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.6;
+            
+            for (let i = 0; i < 30; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 4 + 1;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+            
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = ctx.measureText(currentLine + ' ' + word).width;
+                if (width < maxWidth) {
+                    currentLine += ' ' + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
     </script>
 </body>
 </html>
